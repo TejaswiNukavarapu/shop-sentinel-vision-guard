@@ -398,6 +398,8 @@ const CameraView: React.FC = () => {
       events.push(eventData);
       localStorage.setItem('shopGuardEvents', JSON.stringify(events));
       
+      // Show the response dialog
+      setIsResponding(true);
     } catch (error) {
       console.error('Error starting alarm:', error);
     }
@@ -408,7 +410,6 @@ const CameraView: React.FC = () => {
       alarmSound.pause();
       alarmSound.currentTime = 0;
       setIsAlarmActive(false);
-      setIsResponding(false);
       
       if (cameraStatus === 'motion-detected') {
         setCameraStatus('active');
@@ -453,11 +454,16 @@ const CameraView: React.FC = () => {
     const events = JSON.parse(localStorage.getItem('shopGuardEvents') || '[]');
     events.push(eventData);
     localStorage.setItem('shopGuardEvents', JSON.stringify(events));
+    
+    // Close the responding dialog
+    setIsResponding(false);
   };
 
   const handleUserNotPresent = () => {
     stopAlarm();
     toast.warning('Alert acknowledged - Shop may be at risk');
+    // Close the responding dialog
+    setIsResponding(false);
   };
 
   return (
@@ -580,7 +586,7 @@ const CameraView: React.FC = () => {
       </CardContent>
       
       <CardFooter className="flex justify-center">
-        {cameraStatus === 'inactive' || cameraStatus === 'denied' ? (
+        {(cameraStatus === 'inactive' || cameraStatus === 'denied') ? (
           <Button 
             onClick={startCamera} 
             className="w-full"
@@ -601,7 +607,10 @@ const CameraView: React.FC = () => {
       
       {/* Alarm Response Dialog */}
       <Dialog open={isAlarmActive && isResponding} onOpenChange={(open) => {
-        if (!open) setIsResponding(false);
+        if (!open) {
+          setIsResponding(false);
+          stopAlarm();
+        }
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
